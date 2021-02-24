@@ -1,52 +1,41 @@
 import Head from 'next/head'
+import Link from 'next/link';
 import styles from '../styles/Home.module.css'
+import gql from 'graphql-tag';
+import { initializeApollo } from '../lib/apollo';
 
-export default function Home() {
+export default function Home({characters}) {
   return (
     <div className={styles.container}>
       <Head>
-        <title>Create Next App</title>
+        <title>Next.js Rick and Morty</title>
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
       <main className={styles.main}>
         <h1 className={styles.title}>
-          Welcome to <a href="https://nextjs.org">Next.js!</a>
+          Rick and Morty
         </h1>
 
         <p className={styles.description}>
-          Get started by editing{' '}
-          <code className={styles.code}>pages/index.js</code>
+          
         </p>
 
         <div className={styles.grid}>
-          <a href="https://nextjs.org/docs" className={styles.card}>
-            <h3>Documentation &rarr;</h3>
-            <p>Find in-depth information about Next.js features and API.</p>
-          </a>
-
-          <a href="https://nextjs.org/learn" className={styles.card}>
-            <h3>Learn &rarr;</h3>
-            <p>Learn about Next.js in an interactive course with quizzes!</p>
-          </a>
-
-          <a
-            href="https://github.com/vercel/next.js/tree/master/examples"
-            className={styles.card}
-          >
-            <h3>Examples &rarr;</h3>
-            <p>Discover and deploy boilerplate example Next.js projects.</p>
-          </a>
-
-          <a
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-            className={styles.card}
-          >
-            <h3>Deploy &rarr;</h3>
-            <p>
-              Instantly deploy your Next.js site to a public URL with Vercel.
-            </p>
-          </a>
+          {characters.results.map(character => (
+              <Link href={character.name.replace(/\s+/g, '-')} key={character.id}>
+                <a className={styles.card}>
+                  <img
+                    src={character.image}
+                    alt={character.name}
+                    width={120}
+                    height={120}
+                  />
+                  <h3>{ character.name }</h3>
+                </a>
+              </Link>
+            )
+          )}
         </div>
       </main>
 
@@ -62,4 +51,27 @@ export default function Home() {
       </footer>
     </div>
   )
+}
+
+
+export async function getStaticProps() {
+  const apolloClient = initializeApollo();
+  const { data } = await apolloClient.query({
+    query: gql`
+      query GetCharacters{
+        characters {
+          results{
+            id
+            name
+            image
+          }
+        }
+      }
+    `
+  });
+  return {
+    props: {
+      characters: data.characters
+    }
+  }
 }
